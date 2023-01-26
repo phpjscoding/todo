@@ -20,9 +20,9 @@ export class NotesListe{
              </div>
          </form>
          <div>
-             <button type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 ">All</button>
-         <button type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2">Planned</button>
-         <button type="button" class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 shadow-lg shadow-cyan-500/50 dark:shadow-lg dark:shadow-cyan-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2">Done </button>
+             <button data-filter="all" type="button" class="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 shadow-lg shadow-blue-500/50 dark:shadow-lg dark:shadow-blue-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2 ">All</button>
+         <button data-filter="planned" type="button" class="text-white bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-green-300 dark:focus:ring-green-800 shadow-lg shadow-green-500/50 dark:shadow-lg dark:shadow-green-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2">Planned</button>
+         <button data-filter="done" type="button" class="text-white bg-gradient-to-r from-cyan-400 via-cyan-500 to-cyan-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-cyan-300 dark:focus:ring-cyan-800 shadow-lg shadow-cyan-500/50 dark:shadow-lg dark:shadow-cyan-800/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center mr-2 mb-2">Done </button>
          </div>
          
           <!-- List -->
@@ -32,26 +32,63 @@ export class NotesListe{
          
          
          `;
+         
          this.#NotesList = elem.querySelector('#notes-list');
         
         for( let nota of this.#notes){
            let lis = new NotesListNota(nota)
            lis.appendTo(this.#NotesList)
         }
-        elem.querySelector('form').addEventListener('submit',e=> this.onFormSubmit(e))
+        elem.querySelector('form').addEventListener('submit',e=> this.#onFormSubmit(e))
 
+        elem.querySelectorAll('[data-filter]').forEach(btn=> btn.addEventListener('click',(e)=> this.#filterNotes(e)))
+
+       
+
+    } //end of appendTo()
+
+    /**
+     * 
+     * @param {click event} e 
+     */
+
+    #filterNotes(e){
+      e.preventDefault()
+      let selectedFilter = e.target.attributes['data-filter'].nodeValue || 'all';
+      let parent = document.querySelector('#notes-list')
+      console.log(selectedFilter);
+      switch(selectedFilter){
+        case  'done':
+             parent.classList.remove('sort-by-planned')
+             parent.classList.remove('filter-by-all')
+
+             parent.classList.add('sort-by-done')
+             break;
+        case  'planned':
+            parent.classList.remove('sort-by-done')
+            parent.classList.remove('filter-by-all')
+
+            parent.classList.add('sort-by-planned')
+
+            break;
+        default:
+          parent.classList.add('filter-by-all')
+          parent.classList.remove('sort-by-done')
+          parent.classList.remove('sort-by-planned')
+
+      }
     }
+
 
     
 /**
  * 
  * @param {Submit form} e 
  */
-    onFormSubmit(e){
+    #onFormSubmit(e){
       e.preventDefault();
       const myForm = e.currentTarget;
       let textInput = new FormData(myForm).get('add-note').toString().trim()
-      console.log(textInput);
       if(textInput == '') return;
       let newNote = {
         id: Date.now(),
@@ -82,6 +119,8 @@ class NotesListNota{
       const p = myCreateElement('p',{
         class:"pr-4"
       })
+      
+      
       p.innerText = note.title
       const img = myCreateElement('img',{class:"max-w-full  h-6 w-6",src:"./icons8-trash-can.svg",alt:"remove"})
       img.addEventListener('click',(e)=> this.removeNote(e) )
@@ -91,7 +130,10 @@ class NotesListNota{
       li.append(p)
       li.append(img)
       this.#myLi = li
-      console.log(li);
+     // add class 'note-checked' when page load if input.checked is true
+      if(inp.checked){
+        this.#myLi.classList.add('note-checked')
+      }
 
      }
    /**
@@ -117,7 +159,6 @@ class NotesListNota{
      }
 
      toggleCheckbox(checkbox){
-      console.log(checkbox);
       if(checkbox.checked == true){
         this.#myLi.classList.add('note-checked')
       }else{
